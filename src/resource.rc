@@ -1,0 +1,57 @@
+#include <windows.h>
+LANGUAGE LANG_JAPANESE, 0x0
+
+MENU MENU
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+{
+    POPUP "&File"
+    {
+        MENUITEM "&New",  201
+        MENUITEM "&Open...",  202
+        MENUITEM "&Save",  203
+        MENUITEM "Save &As...",  204
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",  205
+    }
+    POPUP "&Edit"
+    {
+        MENUITEM "&Undo",  221
+        MENUITEM SEPARATOR
+        MENUITEM "&Begin Select",  222
+        MENUITEM "&End Select",  223
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t",  224
+        MENUITEM "&Copy",  225
+        MENUITEM "&Paste",  226
+        MENUITEM "C&lear",  227
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...",  228
+        MENUITEM "Find &Next",  229
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All",  230
+    }
+    POPUP "&Tools"
+    {
+        MENUITEM "&Lookup...",  241
+        MENUITEM SEPARATOR
+        MENUITEM "&Wordwrap",  242
+        MENUITEM "&Font...",  243
+        MENUITEM "&Text Color...", 244
+        MENUITEM "&Background Color...", 245
+    }
+}
+
+FIND_STRING DIALOG 0, 0, 155, 42
+STYLE 0x40 | 0x8 | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
+CAPTION "Find String"
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+FONT 10, "Tahoma"
+{
+     CONTROL "", 101, EDIT, ES_LEFT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 6, 6, 141, 12 
+     CONTROL "Search", 1, BUTTON, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 42, 24, 51, 12 
+     CONTROL "Cancel", 2, BUTTON, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 96, 24, 51, 12 
+}
+
+APPLICATION ICON "APPLICATION.ico"
+
