@@ -17,6 +17,7 @@ using namespace std;
 enum {
     IDC_EDIT_AREA = 101,
     IDC_FILE_NAME_LABEL = 102,
+    IDM_FILE_RELOAD = 200,
     IDM_FILE_NEW = 201,
     IDM_FILE_OPEN = 202,
     IDM_FILE_SAVE = 203,
@@ -37,6 +38,11 @@ enum {
     IDM_TOOLS_FONT = 243,
     IDM_TOOLS_TEXTCOLOR = 244,
     IDM_TOOLS_BACKCOLOR = 245,
+    IDM_TOOLS_CHARSET_MS932 = 246,
+    IDM_TOOLS_CHARSET_UTF8 = 247,
+    IDM_TOOLS_CHARSET_UTF16LE = 248,
+    IDM_TOOLS_ADDBOM = 249,
+    IDM_ABOUT = 250,
     IDC_FIND_STRING_TARGET_BOX = 101,
     MAX_EDIT_BUFFER = 1024 * 64
 };
@@ -55,6 +61,7 @@ static void onActivate(HWND hWnd, int act);
 static void onSize(HWND hWnd, int width, int height);
 static void onInitMenuPopup(HWND hWnd);
 static void onKeyDown(HWND hWnd);
+static void onFileReload(HWND hWnd);
 static void onFileNew(HWND hWnd);
 static void onFileOpen(HWND hWnd);
 static void onFileSave(HWND hWnd);
@@ -74,6 +81,8 @@ static void onToolsWordwrap(HWND hWnd);
 static void onToolsFont(HWND hWnd);
 static void onToolsTextColor(HWND hWnd);
 static void onToolsBackColor(HWND hWnd);
+static void onToolsCharset(HWND hWnd, INT id, INT Charset);
+static void onToolsAddBOM(HWND hWnd);
 static void onFindStringInitDialog(HWND hDlg);
 static void onFindStringOk(HWND hDlg);
 static void onFindStringCancel(HWND hDlg);
@@ -105,6 +114,8 @@ struct MemoPadData {
     vector<int> selectableKeys;
     bool isSelectMode;
     bool isWordwrap;
+    INT charset; // 0: MS932, 1: UTF-8(without BOM), 2: UTF-16 LE
+    bool AddBOM;
     tstring findTargetString;
 };
 
@@ -141,6 +152,9 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         int event = HIWORD(wParam);
 
         switch (id) {
+        case IDM_FILE_RELOAD:
+            onFileReload(hWnd);
+            break;
         case IDM_FILE_NEW:
             onFileNew(hWnd);
             break;
@@ -200,6 +214,23 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
             break;
         case IDM_TOOLS_BACKCOLOR:
             onToolsBackColor(hWnd);
+            break;
+        case IDM_TOOLS_CHARSET_MS932:
+            onToolsCharset(hWnd, id, 0);
+            break;
+        case IDM_TOOLS_CHARSET_UTF8:
+            onToolsCharset(hWnd, id, 1);
+            break;
+        case IDM_TOOLS_CHARSET_UTF16LE:
+            onToolsCharset(hWnd, id, 2);
+            break;
+        case IDM_TOOLS_ADDBOM:
+            onToolsAddBOM(hWnd);
+            break;
+        case IDM_ABOUT:
+            MessageBox(hWnd, _T("KNMemoPad improved by watamario v0.12 rev2\n\n")
+                _T("Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\n\n")
+                _T("Build date: ") _T(__DATE__), _T("About this software"), MB_OK | MB_ICONINFORMATION);
             break;
         }
 
@@ -338,11 +369,14 @@ static void onCreate(HWND hWnd) {
     data->hFindStringDialog = NULL;
     data->isSelectMode = false;
     data->isWordwrap = false;
+    data->charset = 0;
+    data->AddBOM = 0;
 
     InitCommonControls();
 
 	data->hCommandBar = CommandBar_Create(g_hInstance, hWnd, 1);
 	CommandBar_InsertMenubarEx(data->hCommandBar, g_hInstance, _T("MENU"), 0);
+    HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
 
     HWND hEditArea = CreateWindow(_T("EDIT"), _T(""),
         WS_CHILD | WS_BORDER | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE |
@@ -367,6 +401,7 @@ static void onCreate(HWND hWnd) {
 
     bool wordwrap = false;
     tstring propFileName = _T("\\Nand2\\.knmemopad_wm.dat");
+    TCHAR tctemp[256];
 
     if (GetFileAttributes(propFileName.c_str()) == -1) {
         data->hEditAreaFont = KnceUtil::createFont(_T(""), 90, false, false,
@@ -382,13 +417,19 @@ static void onCreate(HWND hWnd) {
         bool italic = _ttoi(props[_T("editor.isItalic")].c_str()) != 0;
         crText = _ttoi64(props[_T("editor.textColor")].c_str());
         crBack = _ttoi64(props[_T("editor.backColor")].c_str());
-        data->hEditAreaFont = KnceUtil::createFont(fontName, pointSize, bold,
-            italic);
-
+        data->charset = _ttoi(props[_T("editor.charset")].c_str());
+        data->AddBOM = _ttoi(props[_T("editor.addBOM")].c_str()) != 0;
+        data->hEditAreaFont = KnceUtil::createFont(fontName, pointSize, bold, italic);
         wordwrap = _ttoi(props[_T("editor.isWordwrap")].c_str()) != 0;
+        for(int i=0; i<16; i++){
+            wsprintf(tctemp, TEXT("editor.custColor%d"), i);
+            CustColors[i] = _ttoi64(props[tctemp].c_str());
+        }
     }
     hBackBsh = CreateSolidBrush(crBack);
-
+    CheckMenuRadioItem(hMenu, IDM_TOOLS_CHARSET_MS932, IDM_TOOLS_CHARSET_UTF16LE, IDM_TOOLS_CHARSET_MS932 + data->charset, MF_BYCOMMAND);
+    CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | (data->AddBOM ? MF_CHECKED : MF_UNCHECKED));
+    if(data->charset != 1) EnableMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_GRAYED);
     SendMessage(hEditArea, WM_SETFONT, (WPARAM)data->hEditAreaFont, false);
 
     if (wordwrap)
@@ -411,7 +452,7 @@ static void onDestroy(HWND hWnd) {
     KnceUtil::restoreKeyRepeatSpeed();
 
     map<tstring, tstring> props;
-    TCHAR valCStr[256];
+    TCHAR valCStr[256], tctemp[256];
 
     tstring fontName;
     int pointSize = 0;
@@ -435,6 +476,14 @@ static void onDestroy(HWND hWnd) {
     props[_T("editor.textColor")] = valCStr;
     wsprintf(valCStr, TEXT("%u"), crBack);
     props[_T("editor.backColor")] = valCStr;
+    wsprintf(valCStr, TEXT("%d"), data->charset);
+    props[_T("editor.charset")] = valCStr;
+    props[_T("editor.AddBOM")] = data->AddBOM  ? _T("1") : _T("0");
+    for(int i=0; i<16; i++){
+        wsprintf(valCStr, TEXT("%u"), CustColors[i]);
+        wsprintf(tctemp, TEXT("editor.custColor%d"), i);
+        props[tctemp] = valCStr;
+    }
 
     tstring propFileName = _T("\\Nand2\\.knmemopad_wm.dat");
     KnceUtil::writePropertyFile(propFileName, props);
@@ -502,6 +551,19 @@ static void onInitMenuPopup(HWND hWnd) {
 
     CheckMenuItem(hMenu, IDM_TOOLS_WORDWRAP, MF_BYCOMMAND |
         (data->isWordwrap ? MF_CHECKED : MF_UNCHECKED));
+
+    CheckMenuRadioItem(hMenu, IDM_TOOLS_CHARSET_MS932, IDM_TOOLS_CHARSET_UTF16LE, IDM_TOOLS_CHARSET_MS932 + data->charset, MF_BYCOMMAND);
+    CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND |
+        (data->AddBOM ? MF_CHECKED : MF_UNCHECKED));
+    if(data->charset != 1) EnableMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_GRAYED);
+}
+
+static void onFileReload(HWND hWnd){
+    if (!checkSaving(hWnd))
+        return;
+
+    MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
+    openFile(hWnd, data->editFileName);
 }
 
 static void onFileNew(HWND hWnd) {
@@ -736,6 +798,31 @@ static void onToolsBackColor(HWND hWnd) {
 	InvalidateRect(g_hEditArea, NULL, TRUE);
 }
 
+static void onToolsCharset(HWND hWnd, INT id, INT Charset){
+    MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
+    HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
+    CheckMenuRadioItem(hMenu, IDM_TOOLS_CHARSET_MS932, IDM_TOOLS_CHARSET_UTF16LE, id, MF_BYCOMMAND);
+    if(Charset == 1) EnableMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_ENABLED);
+    else EnableMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_GRAYED);
+    data->charset = Charset;
+}
+
+static void onToolsAddBOM(HWND hWnd){
+    MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
+    HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
+    MENUITEMINFO mii = {0};
+    mii.fMask = MIIM_STATE;
+    mii.cbSize = sizeof(MENUITEMINFO);
+    GetMenuItemInfo(hMenu, IDM_TOOLS_ADDBOM, FALSE, &mii);
+    if(mii.fState & MF_CHECKED){
+        CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_UNCHECKED);
+        data->AddBOM = false;
+    }else{
+        CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_CHECKED);
+        data->AddBOM = true;
+    }
+}
+
 static void onFindStringInitDialog(HWND hDlg) {
     MemoPadData *data = (MemoPadData *)GetWindowLong(GetWindow(hDlg, GW_OWNER),
         GWL_USERDATA);
@@ -779,56 +866,71 @@ static void onFindStringTargetBox(HWND hDlg, int event) {
 }
 
 static void openFile(HWND hWnd, const tstring &fileName) {
-    const int lineBuffSize = 1024;
-
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
 
     HWND hEditArea = GetDlgItem(hWnd, IDC_EDIT_AREA);
 
-    if (fileName.empty())
+    if (fileName.empty()){
         SetWindowText(hEditArea, _T(""));
-    else {
-        FILE *file = _tfopen(fileName.c_str(), _T("r"));
-        if (file == NULL) {
-            tstring msg = _T("Cannot open file: ") + fileName;
-            MessageBox(hWnd, msg.c_str(), _T("Error"),
-                MB_ICONEXCLAMATION);
-
-            return;
-        }
- 
-        tstring editStream;
-        TCHAR lineBuff[lineBuffSize];
-        char mbLineBuff[lineBuffSize * 2];
-
-        while (true) {
-            if (fgets(mbLineBuff, lineBuffSize * 2, file) == NULL)
-                break;
-
-            char *cr = strchr(mbLineBuff, '\n');
-            if (cr != NULL)
-                *cr = '\0';
-
-            MultiByteToWideChar(932, 0, mbLineBuff, -1, lineBuff,
-                lineBuffSize);
-
-            editStream += lineBuff;
-            editStream += _T("\r\n");
-        }
-
-        fclose(file);
-
-        SetWindowText(hEditArea, editStream.c_str());
+        SendMessage(hEditArea, EM_SETMODIFY, false, 0);
+        data->editFileName = fileName;
+        updateFileNameLabel(hWnd);
+        return;
     }
 
-    SendMessage(hEditArea, EM_SETMODIFY, false, 0);
+    HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ,
+                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile == INVALID_HANDLE_VALUE){
+        MessageBox(hWnd, (_T("Cannot open file: ") + fileName).c_str(), _T("Error"), MB_ICONEXCLAMATION);
+        return;
+    }
 
+    DWORD dwtemp, dwsize;
+    dwsize = GetFileSize(hFile, NULL);
+    if (dwsize > 65536){
+        MessageBox(hWnd, (_T("Too large file: ") + fileName).c_str(), _T("Error"), MB_ICONEXCLAMATION);
+        return;
+    }
+
+    PTSTR Buff = (PTSTR)malloc(MAX_EDIT_BUFFER);
+    PSTR mbBuff = (PSTR)malloc(MAX_EDIT_BUFFER * 2);
+
+    if (data->charset == 0){
+        ReadFile(hFile, mbBuff, dwsize, &dwtemp, NULL);
+        MultiByteToWideChar(932, 0, mbBuff, -1, Buff, MAX_EDIT_BUFFER);
+        SetWindowText(hEditArea, Buff);
+    }
+    else if (data->charset == 1){
+        ReadFile(hFile, mbBuff, dwsize, &dwtemp, NULL);
+        if (mbBuff[0]=='\xEF' && mbBuff[1]=='\xBB' && mbBuff[2]=='\xBF'){
+            MultiByteToWideChar(65001, 0, &mbBuff[3], -1, Buff, MAX_EDIT_BUFFER);
+            data->AddBOM = true;
+        }
+        else{
+            MultiByteToWideChar(65001, 0, mbBuff, -1, Buff, MAX_EDIT_BUFFER);
+            data->AddBOM = false;
+        }
+        HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
+        CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND |
+            (data->AddBOM ? MF_CHECKED : MF_UNCHECKED));
+        SetWindowText(hEditArea, Buff);
+    }
+    else{
+        ReadFile(hFile, Buff, dwsize, &dwtemp, NULL);
+        if(Buff[0] == L'\xFEFF') SetWindowText(hEditArea, &Buff[1]);
+        else SetWindowText(hEditArea, Buff);
+    }
+    
+    CloseHandle(hFile);
+    free(Buff);
+    free(mbBuff);
+
+    SendMessage(hEditArea, EM_SETMODIFY, false, 0);
     data->editFileName = fileName;
     updateFileNameLabel(hWnd);
 }
 
 static bool saveFile(HWND hWnd, bool isOverwrite) {
-    const int lineBuffSize = 1024;
 
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
 
@@ -838,53 +940,41 @@ static bool saveFile(HWND hWnd, bool isOverwrite) {
         params.isSaveFile = true;
         params.filters = _T("Text files (*.txt)|*.txt|All files (*.*)|*.*");
         _tcsncpy(params.fileName, fileName.c_str(), MAX_PATH);
-
-        if (!knceChooseFile(hWnd, &params))
-            return false;
-
+        if (!knceChooseFile(hWnd, &params)) return false;
         fileName = params.fileName;
     }
 
     HWND hEditArea = GetDlgItem(hWnd, IDC_EDIT_AREA);
-
     static TCHAR editBuff[MAX_EDIT_BUFFER];
     GetWindowText(hEditArea, editBuff, MAX_EDIT_BUFFER);
-
-    FILE *file = _tfopen(fileName.c_str(), _T("w"));
-    if (file == NULL) {
-        tstring msg = _T("Cannot write file: ") + fileName;
-        MessageBox(hWnd, msg.c_str(), _T("Error"),
-            MB_ICONEXCLAMATION);
-
+    DWORD dwtemp; 
+    
+    HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_WRITE, FILE_SHARE_READ,
+                NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE){
+        MessageBox(hWnd, (_T("Cannot write file: ") + fileName).c_str(), _T("Error"), MB_OK | MB_ICONWARNING);
         return false;
     }
+    if (data->charset == 1 && data->AddBOM) WriteFile(hFile, "\xEF\xBB\xBF", strlen("\xEF\xBB\xBF")*sizeof(char), &dwtemp, NULL);
+    if (data->charset == 2) WriteFile(hFile, _T("\xFEFF"), _tcslen(_T("\xFEFF"))*sizeof(TCHAR), &dwtemp, NULL);
+    
+    PSTR mbBuff = (PSTR)malloc(MAX_EDIT_BUFFER * 2);
+    INT ret;
 
-    tstring line;
-    char mbLineBuff[lineBuffSize * 2];
-    TCHAR *curPtr = editBuff;
-
-    while (*curPtr != _T('\0')) {
-        TCHAR *sepPtr = _tcschr(curPtr, '\r');
-
-        if (sepPtr == NULL) {
-            line = curPtr;
-            curPtr = _tcschr(curPtr, '\0');
-        }
-        else {
-            line = tstring(curPtr, sepPtr - curPtr);
-            curPtr = sepPtr + 2;
-        }
-
-        line += _T("\n");
-
-        WideCharToMultiByte(932, 0, line.c_str(), -1, mbLineBuff,
-            lineBuffSize * 2, NULL, NULL);
-
-        fputs(mbLineBuff, file);
+    if (data->charset == 0){
+        ret = WideCharToMultiByte(932, 0, editBuff, -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
+        WriteFile(hFile, mbBuff, ret-1, &dwtemp, NULL);
     }
-
-    fclose(file);
-
+    else if (data->charset == 1){
+        ret = WideCharToMultiByte(65001, 0, editBuff, -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
+        WriteFile(hFile, mbBuff, ret-1, &dwtemp, NULL);
+    }
+    else if (data->charset == 2){
+        WriteFile(hFile, editBuff, _tcslen(editBuff)*sizeof(TCHAR), &dwtemp, NULL);
+    }
+    
+    CloseHandle(hFile);
+    free(mbBuff);
     SendMessage(hEditArea, EM_SETMODIFY, false, 0);
 
     data->editFileName = fileName;

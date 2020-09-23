@@ -1,11 +1,37 @@
 #include <windows.h>
 LANGUAGE LANG_JAPANESE, 0x0
 
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     0, 1, 2, 2
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904b0"
+        {
+            VALUE "FileDescription",  "KNMemoPad improved by watamario\0"
+            VALUE "FileVersion",      "v0.12 rev2\0"
+            VALUE "InternalName",     "KNMemoPad\0"
+            VALUE "LegalCopyright",   "Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\0"
+            VALUE "ProductName",      "KNMemoPad\0"
+            VALUE "ProductVersion",   "v0.12 rev2\0"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x409, 1200
+    }
+}
+
 MENU MENU
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 {
     POPUP "&File"
     {
+        MENUITEM "&Reload", 200
         MENUITEM "&New",  201
         MENUITEM "&Open...",  202
         MENUITEM "&Save",  203
@@ -38,7 +64,16 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
         MENUITEM "&Font...",  243
         MENUITEM "&Text Color...", 244
         MENUITEM "&Background Color...", 245
+        MENUITEM SEPARATOR
+        POPUP "&Charset..."
+        {
+            MENUITEM "&Shift_JIS(MS932, ANSI)", 246
+            MENUITEM "&UTF-8(Unicode)", 247
+            MENUITEM "UTF-16 &LE(Unicode)", 248
+        }
+        MENUITEM "&Add BOM (UTF-8)", 249
     }
+    MENUITEM "&About", 250
 }
 
 FIND_STRING DIALOG 0, 0, 155, 42
