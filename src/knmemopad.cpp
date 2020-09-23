@@ -100,6 +100,7 @@ CHOOSECOLOR cc = {0};
 COLORREF CustColors[16], crText, crBack;
 HBRUSH hBackBsh;
 DLL_ChooseColor dll_ChooseColor;
+LPTSTR g_lpCmdLine;
 
 static unsigned int g_dicKeyDownMessage =
     RegisterWindowMessage(_T("DicKeyDown"));
@@ -441,7 +442,7 @@ static void onCreate(HWND hWnd) {
 
     KnceUtil::changeKeyRepeatSpeed(500, 30);
 
-    openFile(hWnd, _T(""));
+    openFile(hWnd, g_lpCmdLine);
 
     SetFocus(hEditArea);
 }
@@ -1105,6 +1106,7 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR lpCmd, int nShow)
     const TCHAR *className = _T("KNMemoPad");
 
     g_hInstance = hInst;
+    g_lpCmdLine = lpCmd;
 
     WNDCLASS windowClass;
     memset(&windowClass, 0, sizeof(WNDCLASS));
