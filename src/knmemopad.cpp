@@ -41,8 +41,9 @@ enum {
     IDM_TOOLS_CHARSET_MS932 = 246,
     IDM_TOOLS_CHARSET_UTF8 = 247,
     IDM_TOOLS_CHARSET_UTF16LE = 248,
-    IDM_TOOLS_ADDBOM = 249,
-    IDM_ABOUT = 250,
+    IDM_TOOLS_CHARSET_AUTODETECT = 249,
+    IDM_TOOLS_ADDBOM = 250,
+    IDM_ABOUT = 251,
     IDC_FIND_STRING_TARGET_BOX = 101,
     MAX_EDIT_BUFFER = 1024 * 64
 };
@@ -82,6 +83,7 @@ static void onToolsFont(HWND hWnd);
 static void onToolsTextColor(HWND hWnd);
 static void onToolsBackColor(HWND hWnd);
 static void onToolsCharset(HWND hWnd, INT id, INT Charset);
+static void onToolsCharsetAutodetect(HWND hWnd);
 static void onToolsAddBOM(HWND hWnd);
 static void onFindStringInitDialog(HWND hDlg);
 static void onFindStringOk(HWND hDlg);
@@ -116,6 +118,7 @@ struct MemoPadData {
     bool isSelectMode;
     bool isWordwrap;
     INT charset; // 0: MS932, 1: UTF-8(without BOM), 2: UTF-16 LE
+    bool csAutoDetect;
     bool AddBOM;
     tstring findTargetString;
 };
@@ -225,12 +228,15 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         case IDM_TOOLS_CHARSET_UTF16LE:
             onToolsCharset(hWnd, id, 2);
             break;
+        case IDM_TOOLS_CHARSET_AUTODETECT:
+            onToolsCharsetAutodetect(hWnd);
         case IDM_TOOLS_ADDBOM:
             onToolsAddBOM(hWnd);
             break;
         case IDM_ABOUT:
-            MessageBox(hWnd, _T("KNMemoPad improved by watamario v0.12 rev2\n\n")
+            MessageBox(hWnd, _T("KN MemoPad improved by watamario v0.12 rev3\n\n")
                 _T("Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\n\n")
+                _T("Authors won't take any responsibility for any damages by using this software. Please use this software under your responsibility.\n\n")
                 _T("Build date: ") _T(__DATE__), _T("About this software"), MB_OK | MB_ICONINFORMATION);
             break;
         }
@@ -371,7 +377,8 @@ static void onCreate(HWND hWnd) {
     data->isSelectMode = false;
     data->isWordwrap = false;
     data->charset = 0;
-    data->AddBOM = 0;
+    data->AddBOM = false;
+    data->csAutoDetect = true;
 
     InitCommonControls();
 
@@ -419,6 +426,7 @@ static void onCreate(HWND hWnd) {
         crText = _ttoi64(props[_T("editor.textColor")].c_str());
         crBack = _ttoi64(props[_T("editor.backColor")].c_str());
         data->charset = _ttoi(props[_T("editor.charset")].c_str());
+        data->csAutoDetect = _ttoi(props[_T("editor.csAutoDetect")].c_str()) != 0;
         data->AddBOM = _ttoi(props[_T("editor.addBOM")].c_str()) != 0;
         data->hEditAreaFont = KnceUtil::createFont(fontName, pointSize, bold, italic);
         wordwrap = _ttoi(props[_T("editor.isWordwrap")].c_str()) != 0;
@@ -430,6 +438,7 @@ static void onCreate(HWND hWnd) {
     hBackBsh = CreateSolidBrush(crBack);
     CheckMenuRadioItem(hMenu, IDM_TOOLS_CHARSET_MS932, IDM_TOOLS_CHARSET_UTF16LE, IDM_TOOLS_CHARSET_MS932 + data->charset, MF_BYCOMMAND);
     CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | (data->AddBOM ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_TOOLS_CHARSET_AUTODETECT, MF_BYCOMMAND | (data->csAutoDetect ? MF_CHECKED : MF_UNCHECKED));
     if(data->charset != 1) EnableMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_GRAYED);
     SendMessage(hEditArea, WM_SETFONT, (WPARAM)data->hEditAreaFont, false);
 
@@ -480,6 +489,7 @@ static void onDestroy(HWND hWnd) {
     wsprintf(valCStr, TEXT("%d"), data->charset);
     props[_T("editor.charset")] = valCStr;
     props[_T("editor.AddBOM")] = data->AddBOM  ? _T("1") : _T("0");
+    props[_T("editor.csAutoDetect")] = data->csAutoDetect  ? _T("1") : _T("0");
     for(int i=0; i<16; i++){
         wsprintf(valCStr, TEXT("%u"), CustColors[i]);
         wsprintf(tctemp, TEXT("editor.custColor%d"), i);
@@ -554,8 +564,8 @@ static void onInitMenuPopup(HWND hWnd) {
         (data->isWordwrap ? MF_CHECKED : MF_UNCHECKED));
 
     CheckMenuRadioItem(hMenu, IDM_TOOLS_CHARSET_MS932, IDM_TOOLS_CHARSET_UTF16LE, IDM_TOOLS_CHARSET_MS932 + data->charset, MF_BYCOMMAND);
-    CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND |
-        (data->AddBOM ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | (data->AddBOM ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_TOOLS_CHARSET_AUTODETECT, MF_BYCOMMAND | (data->csAutoDetect ? MF_CHECKED : MF_UNCHECKED));
     if(data->charset != 1) EnableMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | MF_GRAYED);
 }
 
@@ -808,6 +818,22 @@ static void onToolsCharset(HWND hWnd, INT id, INT Charset){
     data->charset = Charset;
 }
 
+static void onToolsCharsetAutodetect(HWND hWnd){
+    MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
+    HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
+    MENUITEMINFO mii = {0};
+    mii.fMask = MIIM_STATE;
+    mii.cbSize = sizeof(MENUITEMINFO);
+    GetMenuItemInfo(hMenu, IDM_TOOLS_CHARSET_AUTODETECT, FALSE, &mii);
+    if(mii.fState & MF_CHECKED){
+        CheckMenuItem(hMenu, IDM_TOOLS_CHARSET_AUTODETECT, MF_BYCOMMAND | MF_UNCHECKED);
+        data->csAutoDetect = false;
+    }else{
+        CheckMenuItem(hMenu, IDM_TOOLS_CHARSET_AUTODETECT, MF_BYCOMMAND | MF_CHECKED);
+        data->csAutoDetect = true;
+    }
+}
+
 static void onToolsAddBOM(HWND hWnd){
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
     HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
@@ -895,6 +921,15 @@ static void openFile(HWND hWnd, const tstring &fileName) {
 
     PTSTR Buff = (PTSTR)malloc(MAX_EDIT_BUFFER);
     PSTR mbBuff = (PSTR)malloc(MAX_EDIT_BUFFER * 2);
+
+    // Judge the charset
+    if(data->csAutoDetect){
+        ReadFile(hFile, mbBuff, 3, &dwtemp, NULL);
+        if (mbBuff[0]=='\xEF' && mbBuff[1]=='\xBB' && mbBuff[2]=='\xBF') data->charset=1;
+        else if (mbBuff[0]=='\xFF' && mbBuff[1]=='\xFE')  data->charset=2;
+        else if (data->charset==2) data->charset=0;
+        SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+    }
 
     if (data->charset == 0){
         ReadFile(hFile, mbBuff, dwsize, &dwtemp, NULL);

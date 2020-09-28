@@ -2,7 +2,7 @@
 LANGUAGE LANG_JAPANESE, 0x0
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     0, 1, 2, 2
+FILEVERSION     0, 1, 2, 3
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
 FILEOS          VOS_NT_WINDOWS32
@@ -12,12 +12,12 @@ FILETYPE        VFT_APP
     {
         BLOCK "040904b0"
         {
-            VALUE "FileDescription",  "KNMemoPad improved by watamario\0"
-            VALUE "FileVersion",      "v0.12 rev2\0"
-            VALUE "InternalName",     "KNMemoPad\0"
+            VALUE "FileDescription",  "KN MemoPad improved by watamario\0"
+            VALUE "FileVersion",      "v0.12 rev3\0"
+            VALUE "InternalName",     "KN MemoPad\0"
             VALUE "LegalCopyright",   "Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\0"
-            VALUE "ProductName",      "KNMemoPad\0"
-            VALUE "ProductVersion",   "v0.12 rev2\0"
+            VALUE "ProductName",      "KN MemoPad\0"
+            VALUE "ProductVersion",   "v0.12 rev3\0"
         }
     }
     BLOCK "VarFileInfo"
@@ -70,10 +70,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
             MENUITEM "&Shift_JIS(MS932, ANSI)", 246
             MENUITEM "&UTF-8(Unicode)", 247
             MENUITEM "UTF-16 &LE(Unicode)", 248
+            MENUITEM SEPARATOR
+            MENUITEM "&Auto Detect by BOM", 249
         }
-        MENUITEM "&Add BOM (UTF-8)", 249
+        MENUITEM "&Add BOM (UTF-8)", 250
     }
-    MENUITEM "&About", 250
+    MENUITEM "&About", 251
 }
 
 FIND_STRING DIALOG 0, 0, 155, 42
@@ -89,4 +91,3 @@ FONT 10, "Tahoma"
 }
 
 APPLICATION ICON "APPLICATION.ico"
-
