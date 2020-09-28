@@ -8,7 +8,9 @@ Knatech 氏制作の SHARP Brain 用テキストエディタ **KN MemoPad** に�
 \* Knatech 氏は独自DLLを用いて便利なダイアログなどの実装を行われていたため、私はMakefileの使えないeVC4で試行錯誤しながらlibの作成や本体プログラムのコンパイルを行った、という過程があります。また、文字コードのサポートを広げるためにファイル読み込み・保存の内部処理を大きく書き換えています。
 
 # 動作要件
-これは **Windows CE (ARMv4I)** 専用ソフトウェアです。一部 SHARP Brain 専用の機能があります。**SHARP Brain PW-SH1 (Windows Embedded CE 6.0, ARMV4I)** で動作確認を行っています。
+これは **Windows CE (ARMv4I)** 専用ソフトウェアです。一部 SHARP Brain 専用の機能があります。
+
+**SHARP Brain PW-SH1 (Windows Embedded CE 6.0, ARMV4I)** で動作確認を行っています。
 
 # 文字コード切り替えについて
 BOMの情報だけを基に文字コードの自動判別を行います。BOM無しファイル(Shift_JIS/BOM無しUTF-8)の場合は、判別できませんので予め **Tools -> Charset...** で選択してから開いてください(先に開いてから選択し、Reloadでも構いません)。なお、この機能は **Tools -> Charset... -> Auto Detect by BOM** から無効化も可能です。
@@ -22,7 +24,7 @@ Reload及びSaveは、その時点で選択されている文字コードで行�
 - 違ったら、BOM無しと判断し、現在ユーザが設定している文字コードを見る。UTF-16 LE以外ならそのまま、UTF-16 LEならShift_JISに設定する。
 
 # ソースコードについて
-　**src** 内にあります。プロジェクトは **eMbedded Visual C++ 4.0** のものです。
+**src** 内にあります。プロジェクトは **eMbedded Visual C++ 4.0** のものです。
 
 # 使用上の注意
 **製作者は、このプログラムの利用によって生じた、いかなる損害についても責任を負いません。**
