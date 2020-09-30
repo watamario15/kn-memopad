@@ -2,7 +2,7 @@
 LANGUAGE LANG_JAPANESE, 0x0
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     0, 1, 2, 4
+FILEVERSION     0, 1, 2, 5
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
 FILEOS          VOS_NT_WINDOWS32
@@ -13,11 +13,11 @@ FILETYPE        VFT_APP
         BLOCK "040904b0"
         {
             VALUE "FileDescription",  "KN MemoPad improved by watamario\0"
-            VALUE "FileVersion",      "v0.12 rev4\0"
+            VALUE "FileVersion",      "v0.12 rev5\0"
             VALUE "InternalName",     "KN MemoPad\0"
             VALUE "LegalCopyright",   "Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\0"
             VALUE "ProductName",      "KN MemoPad\0"
-            VALUE "ProductVersion",   "v0.12 rev4\0"
+            VALUE "ProductVersion",   "v0.12 rev5\0"
         }
     }
     BLOCK "VarFileInfo"
@@ -67,21 +67,22 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
         MENUITEM SEPARATOR
         POPUP "&Charset..."
         {
-            MENUITEM "&Shift_JIS(MS932, ANSI)", 246
-            MENUITEM "&UTF-8(Unicode)", 247
-            MENUITEM "UTF-16 &LE(Unicode)", 248
+            MENUITEM "&Shift_JIS (MS932, ANSI_JP)", 246
+            MENUITEM "&UTF-8 (Unicode)", 247
+            MENUITEM "UTF-16 &LE (Unicode)", 248
+            MENUITEM "MS1252 (ANSI_EN)", 249
             MENUITEM SEPARATOR
-            MENUITEM "&Auto Detect by BOM", 249
+            MENUITEM "&Auto Detect by BOM", 250
         }
         POPUP "&Newline Code..."
         {
-            MENUITEM "&CRLF", 250
-            MENUITEM "&LF", 251
-            MENUITEM "C&R", 252
+            MENUITEM "&CRLF", 251
+            MENUITEM "&LF", 252
+            MENUITEM "C&R", 253
         }
-        MENUITEM "&Add BOM (UTF-8)", 253
+        MENUITEM "&Add BOM (UTF-8)", 254
     }
-    MENUITEM "&About", 254
+    MENUITEM "&About", 255
 }
 
 FIND_STRING DIALOG 0, 0, 155, 42
