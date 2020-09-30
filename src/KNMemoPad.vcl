@@ -3,25 +3,23 @@
 <pre>
 <h1>ビルドのログ</h1>
 <h3>
---------------------構成 : KNMemoPad - Win32 (WCE ARMV4I) Debug--------------------
+--------------------構成 : KNMemoPad - Win32 (WCE ARMV4I) Release--------------------
 </h3>
 <h3>コマンド ライン</h3>
-Creating command line "rc.exe /l 0x411 /fo"ARMV4IDbg/resource.res" /d UNDER_CE=400 /d _WIN32_WCE=400 /d "UNICODE" /d "_UNICODE" /d "DEBUG" /d "WCE_PLATFORM_STANDARDSDK" /d "THUMB" /d "_THUMB_" /d "ARM" /d "_ARM_" /d "ARMV4I" /r "F:\Programming\KN MemoPad\resource.rc"" 
-一時ファイル "C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP88.tmp" を作成し、次の内容を記録します
+一時ファイル "C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP114.tmp" を作成し、次の内容を記録します
 [
-/nologo /W3 /Od /D "DEBUG" /D "ARM" /D "_ARM_" /D "ARMV4I" /D UNDER_CE=400 /D _WIN32_WCE=400 /D "WCE_PLATFORM_STANDARDSDK" /D "UNICODE" /D "_UNICODE" /Fp"ARMV4IDbg/KNMemoPad.pch" /YX /Fo"ARMV4IDbg/" /QRarch4T /QRinterwork-return /MC /c 
-"F:\Programming\KN MemoPad\knmemopad.cpp"
+/nologo /W3 /D _WIN32_WCE=400 /D "ARM" /D "_ARM_" /D "WCE_PLATFORM_STANDARDSDK" /D "ARMV4I" /D UNDER_CE=400 /D "UNICODE" /D "_UNICODE" /D "NDEBUG" /Fp"ARMV4IRel/KNMemoPad.pch" /YX /Fo"ARMV4IRel/" /QRarch4T /QRinterwork-return /O2 /MC /c 
+"F:\Programming\KN MemoPad\src\knmemopad.cpp"
 ]
-Creating command line "clarm.exe @C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP88.tmp" 
-一時ファイル "C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP89.tmp" を作成し、次の内容を記録します
+Creating command line "clarm.exe @C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP114.tmp" 
+一時ファイル "C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP115.tmp" を作成し、次の内容を記録します
 [
-commctrl.lib coredll.lib knceutil-0.12/knceutil.lib kncedlg-0.10/kncedlg-0.10.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /incremental:yes /pdb:"ARMV4IDbg/AppMain.pdb" /debug /nodefaultlib:"libc.lib /nodefaultlib:libcd.lib /nodefaultlib:libcmt.lib /nodefaultlib:libcmtd.lib /nodefaultlib:msvcrt.lib /nodefaultlib:msvcrtd.lib" /out:"ARMV4IDbg/AppMain.exe" /subsystem:windowsce,4.00 /MACHINE:THUMB 
-".\ARMV4IDbg\knmemopad.obj"
-".\ARMV4IDbg\resource.res"
+commctrl.lib coredll.lib knceutil-0.12/knceutil.lib kncedlg-0.10/kncedlg-0.10.lib /nologo /base:"0x00010000" /stack:0x10000,0x1000 /entry:"WinMainCRTStartup" /incremental:no /pdb:"ARMV4IRel/AppMain.pdb" /nodefaultlib:"libc.lib /nodefaultlib:libcd.lib /nodefaultlib:libcmt.lib /nodefaultlib:libcmtd.lib /nodefaultlib:msvcrt.lib /nodefaultlib:msvcrtd.lib" /out:"ARMV4IRel/AppMain.exe" /subsystem:windowsce,4.00 /MACHINE:THUMB 
+".\ARMV4IRel\knmemopad.obj"
+".\ARMV4IRel\resource.res"
 ]
-コマンド ライン "link.exe @C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP89.tmp" の作成中
+コマンド ライン "link.exe @C:\DOCUME~1\WATA\LOCALS~1\Temp\RSP115.tmp" の作成中
 <h3>アウトプット ウィンドウ</h3>
-リソースをコンパイル中...
 コンパイル中...
 knmemopad.cpp
 c:\program files\windows ce tools\wce400\standardsdk\include\armv4i\xstring(724) : warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify -GX
