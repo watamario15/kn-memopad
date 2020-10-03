@@ -35,20 +35,21 @@ enum {
     IDM_EDIT_FIND_NEXT = 229,
     IDM_EDIT_SELECT_ALL = 230,
     IDM_TOOLS_LOOKUP = 241,
-    IDM_TOOLS_WORDWRAP = 242,
-    IDM_TOOLS_FONT = 243,
-    IDM_TOOLS_TEXTCOLOR = 244,
-    IDM_TOOLS_BACKCOLOR = 245,
-    IDM_TOOLS_CHARSET_MS932 = 246,
-    IDM_TOOLS_CHARSET_UTF8 = 247,
-    IDM_TOOLS_CHARSET_UTF16LE = 248,
-    IDM_TOOLS_CHARSET_MS1252 = 249,
-    IDM_TOOLS_CHARSET_AUTODETECT = 250,
-    IDM_TOOLS_NEWLINECODE_CRLF = 251,
-    IDM_TOOLS_NEWLINECODE_LF = 252,
-    IDM_TOOLS_NEWLINECODE_CR = 253,
-    IDM_TOOLS_ADDBOM = 254,
-    IDM_ABOUT = 255,
+    IDM_TOOLS_STATUSBAR = 242,
+    IDM_TOOLS_WORDWRAP = 243,
+    IDM_TOOLS_FONT = 244,
+    IDM_TOOLS_TEXTCOLOR = 245,
+    IDM_TOOLS_BACKCOLOR = 246,
+    IDM_TOOLS_CHARSET_MS932 = 247,
+    IDM_TOOLS_CHARSET_UTF8 = 248,
+    IDM_TOOLS_CHARSET_UTF16LE = 249,
+    IDM_TOOLS_CHARSET_CP1252 = 250,
+    IDM_TOOLS_CHARSET_AUTODETECT = 251,
+    IDM_TOOLS_NEWLINECODE_CRLF = 252,
+    IDM_TOOLS_NEWLINECODE_LF = 253,
+    IDM_TOOLS_NEWLINECODE_CR = 254,
+    IDM_TOOLS_ADDBOM = 255,
+    IDM_ABOUT = 256,
     IDC_FIND_STRING_TARGET_BOX = 101,
     MAX_EDIT_BUFFER = 1024 * 64
 };
@@ -85,15 +86,16 @@ static void onToolsWordwrap(HWND hWnd);
 static void onToolsFont(HWND hWnd);
 static void onToolsTextColor(HWND hWnd);
 static void onToolsBackColor(HWND hWnd);
-static void onToolsCharset(HWND hWnd, INT id, INT Charset);
+static void onToolsCharset(HWND hWnd, INT Charset);
 static void onToolsCharsetAutodetect(HWND hWnd);
-static void onToolsNewlineCode(HWND hWnd, INT id, INT NewlineCode);
+static void onToolsNewlineCode(HWND hWnd, INT NewlineCode);
 static void onToolsAddBOM(HWND hWnd);
+static void onToolsStatusBar(HWND hWnd);
 static void onFindStringInitDialog(HWND hDlg);
 static void onFindStringOk(HWND hDlg);
 static void onFindStringCancel(HWND hDlg);
 static void onFindStringTargetBox(HWND hDlg, int event);
-static void openFile(HWND hWnd, const tstring &fileName);
+static void openFile(HWND hWnd, const tstring &fileName, bool isReload);
 static bool saveFile(HWND hWnd, bool isOverwrite = true);
 static bool checkSaving(HWND hWnd);
 static void updateFileNameLabel(HWND hWnd);
@@ -123,7 +125,8 @@ struct MemoPadData {
     vector<int> selectableKeys;
     bool isSelectMode;
     bool isWordwrap;
-    INT charset; // 0: MS932, 1: UTF-8(without BOM), 2: UTF-16 LE, 3; MS1252
+    bool isStatusBar;
+    INT charset; // 0: MS932, 1: UTF-8, 2: UTF-16 LE, 3; CP1252
     INT crlf; // 0: CRLF, 1: LF, 2: CR
     bool csAutoDetect;
     bool AddBOM;
@@ -227,34 +230,37 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
             onToolsBackColor(hWnd);
             break;
         case IDM_TOOLS_CHARSET_MS932:
-            onToolsCharset(hWnd, id, 0);
+            onToolsCharset(hWnd, 0);
             break;
         case IDM_TOOLS_CHARSET_UTF8:
-            onToolsCharset(hWnd, id, 1);
+            onToolsCharset(hWnd, 1);
             break;
         case IDM_TOOLS_CHARSET_UTF16LE:
-            onToolsCharset(hWnd, id, 2);
+            onToolsCharset(hWnd, 2);
             break;
-        case IDM_TOOLS_CHARSET_MS1252:
-            onToolsCharset(hWnd, id, 3);
+        case IDM_TOOLS_CHARSET_CP1252:
+            onToolsCharset(hWnd, 3);
             break;
         case IDM_TOOLS_CHARSET_AUTODETECT:
             onToolsCharsetAutodetect(hWnd);
             break;
         case IDM_TOOLS_NEWLINECODE_CRLF:
-            onToolsNewlineCode(hWnd, id, 0);
+            onToolsNewlineCode(hWnd, 0);
             break;
         case IDM_TOOLS_NEWLINECODE_LF:
-            onToolsNewlineCode(hWnd, id, 1);
+            onToolsNewlineCode(hWnd, 1);
             break;
         case IDM_TOOLS_NEWLINECODE_CR:
-            onToolsNewlineCode(hWnd, id, 2);
+            onToolsNewlineCode(hWnd, 2);
             break;
         case IDM_TOOLS_ADDBOM:
             onToolsAddBOM(hWnd);
             break;
+        case IDM_TOOLS_STATUSBAR:
+            onToolsStatusBar(hWnd);
+            break;
         case IDM_ABOUT:
-            MessageBox(hWnd, _T("KN MemoPad improved by watamario v0.12 rev5\n\n")
+            MessageBox(hWnd, _T("KN MemoPad improved by watamario v0.12 rev6\n\n")
                 _T("Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\n\n")
                 _T("Authors do not take any responsibility for any damages by using this software.\n\n")
                 _T("Build date: ") _T(__DATE__), _T("About this software"), MB_OK | MB_ICONINFORMATION);
@@ -400,16 +406,13 @@ static void onCreate(HWND hWnd) {
     data->AddBOM = false;
     data->csAutoDetect = true;
     data->crlf = 0;
+    data->isStatusBar = true;
 
     InitCommonControls();
 
 	data->hCommandBar = CommandBar_Create(g_hInstance, hWnd, 1);
 	CommandBar_InsertMenubarEx(data->hCommandBar, g_hInstance, _T("MENU"), 0);
     HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
-
-    INT iRight[] = {120, 180, 360};
-    data->hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM, _T("Line: 1 Column: 1"), hWnd, IDC_STATUS_BAR);
-	SendMessage(data->hStatusBar, SB_SETPARTS, 3, (LPARAM)iRight);
 
     HWND hEditArea = CreateWindow(_T("EDIT"), _T(""),
         WS_CHILD | WS_BORDER | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE |
@@ -454,12 +457,14 @@ static void onCreate(HWND hWnd) {
         data->csAutoDetect = _ttoi(props[_T("editor.csAutoDetect")].c_str()) != 0;
         data->AddBOM = _ttoi(props[_T("editor.AddBOM")].c_str()) != 0;
         data->hEditAreaFont = KnceUtil::createFont(fontName, pointSize, bold, italic);
+        data->isStatusBar = _ttoi(props[_T("editor.isStatusBar")].c_str()) != 0;
         wordwrap = _ttoi(props[_T("editor.isWordwrap")].c_str()) != 0;
         for(i=0; i<16; i++){
             wsprintf(tctemp, TEXT("editor.custColor%d"), i);
             CustColors[i] = _ttoi64(props[tctemp].c_str());
         }
     }
+
     hBackBsh = CreateSolidBrush(crBack);
     SendMessage(hEditArea, WM_SETFONT, (WPARAM)data->hEditAreaFont, false);
 
@@ -472,15 +477,14 @@ static void onCreate(HWND hWnd) {
 
     KnceUtil::changeKeyRepeatSpeed(500, 30);
 
-    openFile(hWnd, g_lpCmdLine);
-    SetTimer(hWnd, 1, 1000/30, UpdateStatusBar);
+    openFile(hWnd, g_lpCmdLine, false);
     SetFocus(hEditArea);
 }
 
 static void onDestroy(HWND hWnd) {
-    KillTimer(hWnd, 1);
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
 
+    if (data->isStatusBar) KillTimer(hWnd, 1);
     KnceUtil::restoreKeyRepeatSpeed();
 
     map<tstring, tstring> props;
@@ -512,6 +516,7 @@ static void onDestroy(HWND hWnd) {
     props[_T("editor.charset")] = valCStr;
     props[_T("editor.AddBOM")] = data->AddBOM  ? _T("1") : _T("0");
     props[_T("editor.csAutoDetect")] = data->csAutoDetect  ? _T("1") : _T("0");
+    props[_T("editor.isStatusBar")] = data->isStatusBar  ? _T("1") : _T("0");
     for(int i=0; i<16; i++){
         wsprintf(valCStr, TEXT("%u"), CustColors[i]);
         wsprintf(tctemp, TEXT("editor.custColor%d"), i);
@@ -546,8 +551,44 @@ static void onSize(HWND hWnd, int width, int height) {
 
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
 
+    MoveWindow(data->hCommandBar, NULL, NULL, NULL, NULL, TRUE);
     int cmdBarHeight = CommandBar_Height(data->hCommandBar);
     int fileNameLabelHeight = cmdBarHeight - 4;
+    int statusBarHeight = 0;
+
+    if(data->isStatusBar){
+        KillTimer(hWnd, 1);
+        DestroyWindow(data->hStatusBar);
+        INT iRight[] = {180, 240, 420};
+        data->hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | CCS_BOTTOM, _T("Line: 1 Column: 1"), hWnd, IDC_STATUS_BAR);
+	    SendMessage(data->hStatusBar, SB_SETPARTS, 3, (LPARAM)iRight);
+
+        INT CharIndex = LOWORD(SendMessage(g_hEditArea, EM_GETSEL, NULL, NULL));
+        INT Row = (INT)SendMessage(g_hEditArea, EM_LINEFROMCHAR, -1, 0);
+        INT RowStart = (INT)SendMessage(g_hEditArea, EM_LINEINDEX, Row, 0);
+        TCHAR szBuf[64];
+        wsprintf(szBuf, TEXT("Line: %d Column: %d"), Row+1, CharIndex-RowStart+1);
+        SendMessage(data->hStatusBar, SB_SETTEXT, 0, (LPARAM)szBuf);
+
+        if(data->crlf==0) SendMessage(data->hStatusBar, SB_SETTEXT, 1, (LPARAM)_T("CRLF"));
+        else if(data->crlf==1) SendMessage(data->hStatusBar, SB_SETTEXT, 1, (LPARAM)_T("LF"));
+        else SendMessage(data->hStatusBar, SB_SETTEXT, 1, (LPARAM)_T("CR"));
+
+        if(data->charset==0) SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("Shift_JIS (MS932, ANSI_JP)"));
+        else if(data->charset==1){
+            if(data->AddBOM) SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("UTF-8 BOM (Unicode)"));
+            else SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("UTF-8 (Unicode)"));
+        }
+        else if(data->charset==2) SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("UTF-16 LE (Unicode)"));
+        else if(data->charset==3) SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("CP1252 (ANSI_EN)"));
+        SetTimer(hWnd, 1, 1000/30, UpdateStatusBar);
+        
+        RECT rect;
+        SendMessage(data->hStatusBar, SB_GETRECT, 0, (LPARAM)&rect);
+        INT BorderWidth[3];
+        SendMessage(data->hStatusBar, SB_GETBORDERS, 0, (LPARAM)BorderWidth);
+        statusBarHeight = rect.bottom-rect.top+BorderWidth[1];
+    }
 
     HWND hFileNameLabel = GetDlgItem(data->hCommandBar, IDC_FILE_NAME_LABEL);
     MoveWindow(hFileNameLabel, width - fileNameLabelWidth - 30,
@@ -555,7 +596,7 @@ static void onSize(HWND hWnd, int width, int height) {
         fileNameLabelWidth, fileNameLabelHeight, true);
 
     HWND hEditArea = GetDlgItem(hWnd, IDC_EDIT_AREA);
-    MoveWindow(hEditArea, 0, cmdBarHeight, width, height - cmdBarHeight,
+    MoveWindow(hEditArea, 0, cmdBarHeight, width, height - cmdBarHeight - statusBarHeight,
         true);
 }
 
@@ -580,10 +621,11 @@ static void onInitMenuPopup(HWND hWnd) {
     EnableMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | (data->charset==1 ? MF_ENABLED : MF_GRAYED)); 
 
     CheckMenuItem(hMenu, IDM_TOOLS_WORDWRAP, MF_BYCOMMAND | (data->isWordwrap ? MF_CHECKED : MF_UNCHECKED));
-    CheckMenuRadioItem(hMenu, IDM_TOOLS_CHARSET_MS932, IDM_TOOLS_CHARSET_MS1252, IDM_TOOLS_CHARSET_MS932 + data->charset, MF_BYCOMMAND);
+    CheckMenuRadioItem(hMenu, IDM_TOOLS_CHARSET_MS932, IDM_TOOLS_CHARSET_CP1252, IDM_TOOLS_CHARSET_MS932 + data->charset, MF_BYCOMMAND);
     CheckMenuRadioItem(hMenu, IDM_TOOLS_NEWLINECODE_CRLF, IDM_TOOLS_NEWLINECODE_CR, IDM_TOOLS_NEWLINECODE_CRLF + data->crlf, MF_BYCOMMAND);
     CheckMenuItem(hMenu, IDM_TOOLS_CHARSET_AUTODETECT, MF_BYCOMMAND | (data->csAutoDetect ? MF_CHECKED : MF_UNCHECKED));
     CheckMenuItem(hMenu, IDM_TOOLS_ADDBOM, MF_BYCOMMAND | (data->AddBOM ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(hMenu, IDM_TOOLS_STATUSBAR, MF_BYCOMMAND | (data->isStatusBar ? MF_CHECKED : MF_UNCHECKED));
 }
 
 static void CALLBACK UpdateStatusBar(HWND hWnd, UINT msg, UINT idTimer, DWORD dwTime){
@@ -615,7 +657,7 @@ static void CALLBACK UpdateStatusBar(HWND hWnd, UINT msg, UINT idTimer, DWORD dw
             else SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("UTF-8 (Unicode)"));
         }
         else if(data->charset==2) SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("UTF-16 LE (Unicode)"));
-        else if(data->charset==3) SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("MS1252 (ANSI_EN)"));
+        else if(data->charset==3) SendMessage(data->hStatusBar, SB_SETTEXT, 2, (LPARAM)_T("CP1252 (ANSI_EN)"));
         Charset_bef = data->charset; AddBOM_bef = data->AddBOM;
     }
 }
@@ -625,14 +667,14 @@ static void onFileReload(HWND hWnd){
         return;
 
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
-    openFile(hWnd, data->editFileName);
+    openFile(hWnd, data->editFileName, true);
 }
 
 static void onFileNew(HWND hWnd) {
     if (!checkSaving(hWnd))
         return;
 
-    openFile(hWnd, _T(""));
+    openFile(hWnd, _T(""), false);
 }
 
 static void onFileOpen(HWND hWnd) {
@@ -651,7 +693,7 @@ static void onFileOpen(HWND hWnd) {
 
     tstring fileName = params.fileName;
 
-    openFile(hWnd, fileName);
+    openFile(hWnd, fileName, false);
 }
 
 static void onFileSave(HWND hWnd) {
@@ -785,6 +827,19 @@ static void onToolsLookup(HWND hWnd) {
 
     SetForegroundWindow(hEdWindow);
 }
+    
+static void onToolsStatusBar(HWND hWnd){
+    MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
+    data->isStatusBar = !data->isStatusBar;
+    if(!data->isStatusBar){
+        KillTimer(hWnd, 1);
+        DestroyWindow(data->hStatusBar);
+    }
+
+    RECT rect;
+    GetClientRect(hWnd, &rect);
+    SendMessage(hWnd, WM_SIZE, SIZE_RESTORED, ((rect.bottom-rect.top)<<16)+(rect.right-rect.left));
+}
 
 static void onToolsWordwrap(HWND hWnd) {
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
@@ -860,36 +915,24 @@ static void onToolsBackColor(HWND hWnd) {
 	InvalidateRect(g_hEditArea, NULL, TRUE);
 }
 
-static void onToolsCharset(HWND hWnd, INT id, INT Charset){
+static void onToolsCharset(HWND hWnd, INT Charset){
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
     data->charset = Charset;
 }
 
 static void onToolsCharsetAutodetect(HWND hWnd){
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
-    HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
-    MENUITEMINFO mii = {0};
-    mii.fMask = MIIM_STATE;
-    mii.cbSize = sizeof(MENUITEMINFO);
-    GetMenuItemInfo(hMenu, IDM_TOOLS_CHARSET_AUTODETECT, FALSE, &mii);
-    if(mii.fState & MF_CHECKED) data->csAutoDetect = false;
-    else data->csAutoDetect = true;
+    data->csAutoDetect = !data->csAutoDetect;
 }
 
-static void onToolsNewlineCode(HWND hWnd, INT id, INT NewlineCode){
+static void onToolsNewlineCode(HWND hWnd, INT NewlineCode){
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
     data->crlf = NewlineCode;
 }
 
 static void onToolsAddBOM(HWND hWnd){
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
-    HMENU hMenu = CommandBar_GetMenu(data->hCommandBar, 0);
-    MENUITEMINFO mii = {0};
-    mii.fMask = MIIM_STATE;
-    mii.cbSize = sizeof(MENUITEMINFO);
-    GetMenuItemInfo(hMenu, IDM_TOOLS_ADDBOM, FALSE, &mii);
-    if(mii.fState & MF_CHECKED) data->AddBOM = false;
-    else data->AddBOM = true;
+    data->AddBOM = !data->AddBOM;
 }
 
 static void onFindStringInitDialog(HWND hDlg) {
@@ -934,7 +977,7 @@ static void onFindStringTargetBox(HWND hDlg, int event) {
         EnableWindow(hOkButton, false);
 }
 
-static void openFile(HWND hWnd, const tstring &fileName) {
+static void openFile(HWND hWnd, const tstring &fileName, bool isReload) {
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
 
     HWND hEditArea = GetDlgItem(hWnd, IDC_EDIT_AREA);
@@ -966,7 +1009,7 @@ static void openFile(HWND hWnd, const tstring &fileName) {
     tstring tstrBuff;
 
     // Judge the charset
-    if(data->csAutoDetect){
+    if(data->csAutoDetect && !isReload){
         ReadFile(hFile, mbBuff, 3, &dwtemp, NULL);
         if (mbBuff[0]=='\xEF' && mbBuff[1]=='\xBB' && mbBuff[2]=='\xBF') data->charset=1;
         else if (mbBuff[0]=='\xFF' && mbBuff[1]=='\xFE')  data->charset=2;
@@ -1076,8 +1119,7 @@ static bool checkSaving(HWND hWnd) {
     MemoPadData *data = (MemoPadData *)GetWindowLong(hWnd, GWL_USERDATA);
 
     HWND hEditArea = GetDlgItem(hWnd, IDC_EDIT_AREA);
-    if (SendMessage(hEditArea, EM_GETMODIFY, 0, 0) == 0)
-        return true;
+    if (SendMessage(hEditArea, EM_GETMODIFY, 0, 0) == 0) return true;
 
     tstring fileName;
     if (data->editFileName.empty())

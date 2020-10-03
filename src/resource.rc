@@ -2,7 +2,7 @@
 LANGUAGE LANG_JAPANESE, 0x0
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     0, 1, 2, 5
+FILEVERSION     0, 1, 2, 6
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
 FILEOS          VOS_NT_WINDOWS32
@@ -13,11 +13,11 @@ FILETYPE        VFT_APP
         BLOCK "040904b0"
         {
             VALUE "FileDescription",  "KN MemoPad improved by watamario\0"
-            VALUE "FileVersion",      "v0.12 rev5\0"
+            VALUE "FileVersion",      "v0.12 rev6\0"
             VALUE "InternalName",     "KN MemoPad\0"
             VALUE "LegalCopyright",   "Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\0"
             VALUE "ProductName",      "KN MemoPad\0"
-            VALUE "ProductVersion",   "v0.12 rev5\0"
+            VALUE "ProductVersion",   "v0.12 rev6\0"
         }
     }
     BLOCK "VarFileInfo"
@@ -60,29 +60,30 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
     {
         MENUITEM "&Lookup...",  241
         MENUITEM SEPARATOR
-        MENUITEM "&Wordwrap",  242
-        MENUITEM "&Font...",  243
-        MENUITEM "&Text Color...", 244
-        MENUITEM "&Background Color...", 245
+        MENUITEM "&Status Bar", 242
+        MENUITEM "&Wordwrap",  243
+        MENUITEM "&Font...",  244
+        MENUITEM "&Text Color...", 245
+        MENUITEM "&Background Color...", 246
         MENUITEM SEPARATOR
         POPUP "&Charset..."
         {
-            MENUITEM "&Shift_JIS (MS932, ANSI_JP)", 246
-            MENUITEM "&UTF-8 (Unicode)", 247
-            MENUITEM "UTF-16 &LE (Unicode)", 248
-            MENUITEM "MS1252 (ANSI_EN)", 249
+            MENUITEM "&Shift_JIS (MS932, ANSI_JP)", 247
+            MENUITEM "&UTF-8 (Unicode)", 248
+            MENUITEM "UTF-16 &LE (Unicode)", 249
+            MENUITEM "CP1252 (ANSI_EN)", 250
             MENUITEM SEPARATOR
-            MENUITEM "&Auto Detect by BOM", 250
+            MENUITEM "&Auto Detect by BOM", 251
         }
         POPUP "&Newline Code..."
         {
-            MENUITEM "&CRLF", 251
-            MENUITEM "&LF", 252
-            MENUITEM "C&R", 253
+            MENUITEM "&CRLF", 252
+            MENUITEM "&LF", 253
+            MENUITEM "C&R", 254
         }
-        MENUITEM "&Add BOM (UTF-8)", 254
+        MENUITEM "&Add BOM (UTF-8)", 255
     }
-    MENUITEM "&About", 255
+    MENUITEM "&About", 256
 }
 
 FIND_STRING DIALOG 0, 0, 155, 42
