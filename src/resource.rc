@@ -2,7 +2,7 @@
 LANGUAGE LANG_JAPANESE, 0x0
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     0, 1, 2, 6
+FILEVERSION     0, 1, 2, 7
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
 FILEOS          VOS_NT_WINDOWS32
@@ -12,12 +12,12 @@ FILETYPE        VFT_APP
     {
         BLOCK "040904b0"
         {
-            VALUE "FileDescription",  "KN MemoPad improved by watamario\0"
-            VALUE "FileVersion",      "v0.12 rev6\0"
+            VALUE "FileDescription",  "KN MemoPad improved by watamario15\0"
+            VALUE "FileVersion",      "v0.12 rev7\0"
             VALUE "InternalName",     "KN MemoPad\0"
-            VALUE "LegalCopyright",   "Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\0"
+            VALUE "LegalCopyright",   "Copyright (C) 2009-2020 Knatech, watamario15. This program is licensed under the GNU GENERAL PUBLIC LICENSE v3.0. This program comes with ABSOLUTELY NO WARRANTY.\0"
             VALUE "ProductName",      "KN MemoPad\0"
-            VALUE "ProductVersion",   "v0.12 rev6\0"
+            VALUE "ProductVersion",   "v0.12 rev7\0"
         }
     }
     BLOCK "VarFileInfo"

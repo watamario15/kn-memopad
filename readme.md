@@ -8,9 +8,9 @@ Knatech 氏制作の SHARP Brain 用テキストエディタ **KN MemoPad** に�
 \* Knatech 氏は独自DLLを用いて便利なダイアログなどの実装を行われていたため、私はMakefileの使えないeVC4で試行錯誤しながらlibの作成や本体プログラムのコンパイルを行った、という過程があります。また、文字コードのサポートを広げるためにファイル読み込み・保存の内部処理を大きく書き換えています。
 
 # 動作要件
-これは **Windows CE (ARMv4I)** 専用ソフトウェアです。一部 SHARP Brain 専用の機能があります。
+これは **Windows CE (ARMv4I)** 用ソフトウェアです。一部 SHARP Brain 専用の機能があります。
 
-**SHARP Brain PW-SH1 (Windows Embedded CE 6.0, ARMV4I)** で動作確認を行っています。
+**SHARP Brain PW-SH1 (Windows Embedded CE 6.0, ARMv5TEJ)** で動作確認を行っています。
 
 # 文字コード切り替えについて
 BOMの情報だけを基に文字コードの自動判別を行います。BOM無しファイル(Shift_JIS/BOM無しUTF-8)の場合は、判別できませんので予め **Tools -> Charset...** で選択してから開いてください(先に開いてから選択し、Reloadでも構いません)。なお、この機能は **Tools -> Charset... -> Auto Detect by BOM** から無効化も可能です。
@@ -45,6 +45,9 @@ wordwrap が無効であれば正しく表示されますが、有効になっ�
 オリジナル版が GNU General Public License v3.0 で配布されていますので、その規定に従い同じく **GNU General Public License v3.0** で配布します。
 
 # 変更履歴
+## v0.12 rev7 (2020/11/1)
+改行コードCRLFで保存しようとすると、本文が空のデータが保存される問題を修正。
+
 ## v0.12 rev6 (2020/10/3)
 ステータスバーの表示・非表示を切り替えられるようにした。
 

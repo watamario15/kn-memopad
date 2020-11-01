@@ -105,11 +105,11 @@ static INT ConvertCRLF(tstring &strRet /*Store results*/, tstring strString /*Ta
 
 HINSTANCE g_hInstance = NULL;
 HWND g_hEditArea;
+LPTSTR g_lpCmdLine;
 CHOOSECOLOR cc = {0};
 COLORREF CustColors[16], crText, crBack;
 HBRUSH hBackBsh;
 DLL_ChooseColor dll_ChooseColor;
-LPTSTR g_lpCmdLine;
 
 static unsigned int g_dicKeyDownMessage =
     RegisterWindowMessage(_T("DicKeyDown"));
@@ -260,9 +260,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
             onToolsStatusBar(hWnd);
             break;
         case IDM_ABOUT:
-            MessageBox(hWnd, _T("KN MemoPad improved by watamario v0.12 rev6\n\n")
-                _T("Built by Knatech and watamario. This software is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\n\n")
-                _T("Authors do not take any responsibility for any damages by using this software.\n\n")
+            MessageBox(hWnd, _T("KN MemoPad improved by watamario15 v0.12 rev7\n\n")
+                _T("Copyright (C) 2009-2020 Knatech, watamario15.\n")
+                _T("This program is licensed under the GNU GENERAL PUBLIC LICENSE v3.0.\n")
+                _T("This program comes with ABSOLUTELY NO WARRANTY.\n\n")
                 _T("Build date: ") _T(__DATE__), _T("About this software"), MB_OK | MB_ICONINFORMATION);
             break;
         }
@@ -1090,18 +1091,18 @@ static bool saveFile(HWND hWnd, bool isOverwrite) {
     if(data->crlf == 1) ConvertCRLF(tstrBuff, editBuff, _T("\n"));
     else if(data->crlf == 2) ConvertCRLF(tstrBuff, editBuff, _T("\r"));
     if (data->charset == 0){
-        ret = WideCharToMultiByte(932, 0, tstrBuff.c_str(), -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
+        ret = WideCharToMultiByte(932, 0, (data->crlf==0 ? editBuff : tstrBuff.c_str()), -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
         WriteFile(hFile, mbBuff, ret-1, &dwtemp, NULL);
     }
     else if (data->charset == 1){
-        ret = WideCharToMultiByte(65001, 0, tstrBuff.c_str(), -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
+        ret = WideCharToMultiByte(65001, 0, (data->crlf==0 ? editBuff : tstrBuff.c_str()), -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
         WriteFile(hFile, mbBuff, ret-1, &dwtemp, NULL);
     }
     else if (data->charset == 2){
-        WriteFile(hFile, tstrBuff.c_str(), _tcslen(tstrBuff.c_str())*sizeof(TCHAR), &dwtemp, NULL);
+        WriteFile(hFile, (data->crlf==0 ? editBuff : tstrBuff.c_str()), _tcslen((data->crlf==0 ? editBuff : tstrBuff.c_str()))*sizeof(TCHAR), &dwtemp, NULL);
     }
     else if (data->charset == 3){
-        ret = WideCharToMultiByte(1252, 0, tstrBuff.c_str(), -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
+        ret = WideCharToMultiByte(1252, 0, (data->crlf==0 ? editBuff : tstrBuff.c_str()), -1, mbBuff, MAX_EDIT_BUFFER * 2, NULL, NULL);
         WriteFile(hFile, mbBuff, ret-1, &dwtemp, NULL);
     }
     
