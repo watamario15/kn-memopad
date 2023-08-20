@@ -3,7 +3,40 @@ Microsoft eMbedded Visual Tools Workspace File, Format Version 4.00
 
 ###############################################################################
 
-Project: "KNMemoPad"=.\KNMemoPad.vcp - Package Owner=<4>
+Project: "KNMemoPad"=".\KNMemoPad.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name kncedlg
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name knceutil
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "kncedlg"=".\BRAIN-ESSENTIAL\kncedlg\kncedlg.vcp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name knceutil
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "knceutil"=".\BRAIN-ESSENTIAL\knceutil\knceutil.vcp" - Package Owner=<4>
 
 Package=<5>
 {{{

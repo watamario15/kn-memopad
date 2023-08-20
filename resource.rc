@@ -1,101 +1,126 @@
 #include <windows.h>
-LANGUAGE LANG_JAPANESE, 0x0
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+//
+// Version information
+//
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     0, 1, 2, 7
+FILEVERSION     VER_STR_FILEVERSION
 FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
 FILEFLAGS       0
 FILEOS          VOS_NT_WINDOWS32
 FILETYPE        VFT_APP
 {
-    BLOCK "StringFileInfo"
+  BLOCK "StringFileInfo"
+  {
+    BLOCK "040904b0"
     {
-        BLOCK "040904b0"
-        {
-            VALUE "FileDescription",  "KN MemoPad improved by watamario15\0"
-            VALUE "FileVersion",      "v0.12 rev7\0"
-            VALUE "InternalName",     "KN MemoPad\0"
-            VALUE "LegalCopyright",   "Copyright (C) 2009-2020 Knatech, watamario15. This program is licensed under the GNU GENERAL PUBLIC LICENSE v3.0. This program comes with ABSOLUTELY NO WARRANTY.\0"
-            VALUE "ProductName",      "KN MemoPad\0"
-            VALUE "ProductVersion",   "v0.12 rev7\0"
-        }
+      VALUE "CompanyName",      VER_STR_COMPANYNAME
+      VALUE "FileDescription",  VER_STR_DESCRIPTION
+      VALUE "FileVersion",      VER_STR_VERSION
+      VALUE "InternalName",     VER_STR_ORIGINALFILENAME
+      VALUE "LegalCopyright",   VER_STR_COPYRIGHT
+      VALUE "OriginalFileName", VER_STR_ORIGINALFILENAME
+      VALUE "ProductName",      VER_STR_APPNAME
+      VALUE "ProductVersion",   VER_STR_VERSION
     }
-    BLOCK "VarFileInfo"
-    {
-        VALUE "Translation", 0x409, 1200
-    }
+  }
+  BLOCK "VarFileInfo"
+  {
+    VALUE "Translation", 0x409, 1200
+  }
 }
 
-MENU MENU
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+//
+// Icon
+//
+
+application ICON "APPLICATION.ico"
+
+
+//
+// Menu
+//
+
+menu MENU
 {
-    POPUP "&File"
+  POPUP "&File"
+  {
+    MENUITEM "&Reload", IDM_FILE_RELOAD
+    MENUITEM "&New", IDM_FILE_NEW
+    MENUITEM "&Open...", IDM_FILE_OPEN
+    MENUITEM "&Save", IDM_FILE_SAVE
+    MENUITEM "Save &As...", IDM_FILE_SAVE_AS
+    MENUITEM SEPARATOR
+    MENUITEM "E&xit", IDM_FILE_EXIT
+  }
+  POPUP "&Edit"
+  {
+    MENUITEM "&Undo", IDM_EDIT_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "&Begin Select", IDM_EDIT_BEGIN_SELECT
+    MENUITEM "&End Select", IDM_EDIT_END_SELECT
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t", IDM_EDIT_CUT
+    MENUITEM "&Copy", IDM_EDIT_COPY
+    MENUITEM "&Paste", IDM_EDIT_PASTE
+    MENUITEM "C&lear", IDM_EDIT_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "&Find...", IDM_EDIT_FIND
+    MENUITEM "Find &Next", IDM_EDIT_FIND_NEXT
+    MENUITEM SEPARATOR
+    MENUITEM "Select &All", IDM_EDIT_SELECT_ALL
+  }
+  POPUP "&Tools"
+  {
+    MENUITEM "&Lookup...", IDM_TOOLS_LOOKUP
+    MENUITEM SEPARATOR
+    MENUITEM "&Status Bar", IDM_TOOLS_STATUSBAR
+    MENUITEM "&Wordwrap", IDM_TOOLS_WORDWRAP
+    MENUITEM "&Font...", IDM_TOOLS_FONT
+    MENUITEM "&Text Color...", IDM_TOOLS_TEXTCOLOR
+    MENUITEM "&Background Color...", IDM_TOOLS_BACKCOLOR
+    MENUITEM SEPARATOR
+    POPUP "&Charset..."
     {
-        MENUITEM "&Reload", 200
-        MENUITEM "&New",  201
-        MENUITEM "&Open...",  202
-        MENUITEM "&Save",  203
-        MENUITEM "Save &As...",  204
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",  205
+      MENUITEM "&Shift_JIS (CP932)", IDM_TOOLS_CHARSET_CP932
+      MENUITEM "&UTF-8 (Unicode)", IDM_TOOLS_CHARSET_UTF8
+      MENUITEM "UTF-16 &LE (Unicode)", IDM_TOOLS_CHARSET_UTF16LE
+      MENUITEM "CP1252 (&ANSI)", IDM_TOOLS_CHARSET_CP1252
+      MENUITEM SEPARATOR
+      MENUITEM "Auto Detect by &BOM", IDM_TOOLS_CHARSET_AUTODETECT
     }
-    POPUP "&Edit"
+    POPUP "&Newline Code..."
     {
-        MENUITEM "&Undo",  221
-        MENUITEM SEPARATOR
-        MENUITEM "&Begin Select",  222
-        MENUITEM "&End Select",  223
-        MENUITEM SEPARATOR
-        MENUITEM "Cu&t",  224
-        MENUITEM "&Copy",  225
-        MENUITEM "&Paste",  226
-        MENUITEM "C&lear",  227
-        MENUITEM SEPARATOR
-        MENUITEM "&Find...",  228
-        MENUITEM "Find &Next",  229
-        MENUITEM SEPARATOR
-        MENUITEM "Select &All",  230
+      MENUITEM "&CRLF", IDM_TOOLS_NEWLINECODE_CRLF
+      MENUITEM "&LF", IDM_TOOLS_NEWLINECODE_LF
+      MENUITEM "C&R", IDM_TOOLS_NEWLINECODE_CR
     }
-    POPUP "&Tools"
-    {
-        MENUITEM "&Lookup...",  241
-        MENUITEM SEPARATOR
-        MENUITEM "&Status Bar", 242
-        MENUITEM "&Wordwrap",  243
-        MENUITEM "&Font...",  244
-        MENUITEM "&Text Color...", 245
-        MENUITEM "&Background Color...", 246
-        MENUITEM SEPARATOR
-        POPUP "&Charset..."
-        {
-            MENUITEM "&Shift_JIS (MS932, ANSI_JP)", 247
-            MENUITEM "&UTF-8 (Unicode)", 248
-            MENUITEM "UTF-16 &LE (Unicode)", 249
-            MENUITEM "CP1252 (ANSI_EN)", 250
-            MENUITEM SEPARATOR
-            MENUITEM "&Auto Detect by BOM", 251
-        }
-        POPUP "&Newline Code..."
-        {
-            MENUITEM "&CRLF", 252
-            MENUITEM "&LF", 253
-            MENUITEM "C&R", 254
-        }
-        MENUITEM "&Add BOM (UTF-8)", 255
-    }
-    MENUITEM "&About", 256
+    MENUITEM "&Add BOM (UTF-8)", IDM_TOOLS_ADDBOM
+  }
+  POPUP "&Help"
+  {
+    MENUITEM "&About", IDM_ABOUT
+  }
 }
 
-FIND_STRING DIALOG 0, 0, 155, 42
+
+//
+// Dialog
+//
+
+find_string DIALOG 0, 0, 155, 42
 STYLE 0x40 | 0x8 | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Find String"
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 FONT 10, "Tahoma"
 {
-     CONTROL "", 101, EDIT, ES_LEFT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 6, 6, 141, 12 
-     CONTROL "Search", 1, BUTTON, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 42, 24, 51, 12 
-     CONTROL "Cancel", 2, BUTTON, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 96, 24, 51, 12 
+  EDITTEXT 101, 6, 6, 141, 12, ES_LEFT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
+  DEFPUSHBUTTON "&Search", 1, 42, 24, 51, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Cancel", 2, 96, 24, 51, 12, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 }
-
-APPLICATION ICON "APPLICATION.ico"
