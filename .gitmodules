@@ -1,0 +1,3 @@
+[submodule "brain-essential"]
+	path = brain-essential
+	url = https://github.com/brain-hackers/brain-essential.git
